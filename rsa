@@ -1,74 +1,32 @@
-import gmpy2
-import random
-import time
+#!/usr/bin/python3
+"""
+Factorize numbers in a file into a product of two prime numbers
+"""
+import sys
 
-def pollard_rho(n, x, c):
-    """
-    Implementation of Pollard's rho algorithm for factoring integers.
-    """
-    if gmpy2.gcd(x - 1, n) != 1:
-        return gmpy2.gcd(x - 1, n)
-    if gmpy2.gcd(x + 1, n) != 1:
-        return gmpy2.gcd(x + 1, n)
-    x1 = x
-    x2 = x
-    while True:
-        x1 = (x1 * x1 % n - c) % n
-        x1 = (x1 + n) % n if x1 < 0 else x1
-        x2 = (x2 * x2 % n - c) % n
-        x2 = (x2 * x2 % n - c) % n
-        x2 = (x2 + n) % n if x2 < 0 else x2
-        d = gmpy2.gcd(x1 - x2, n)
-        if d > 1:
-            return d
-        if d == n:
-            break
-    return None
 
-def quadratic_sieve(n, limit=10):
+def factorize():
     """
-    Implementation of the Quadratic Sieve algorithm for factoring integers.
+    A function to search file and factorize the given set of numbers into two prime numbers (format n = p*q)
     """
-    if gmpy2.is_prime(n):
-        return [n]
-    if n % 2 == 0:
-        return [2, n // 2]
-    sqrt_n = gmpy2.isqrt(n)
-    factors = []
-    for k in range(1, limit):
-        b = gmpy2.mpz(random.randint(1, sqrt_n))
-        r = gmpy2.mpz(random.randint(1, sqrt_n))
-        x = gmpy2.mpz(b * b - n * r * r)
-        if x < 0:
-            x = -x
-        if gmpy2.is_square(x):
-            q = gmpy2.isqrt(x)
-            if q * q == x:
-                factors.append(q - r * b)
-                factors.append(q + r * b)
-    if len(factors) == 0:
-        return None
-    for i in range(len(factors)):
-        for j in range(i + 1, len(factors)):
-            f = gmpy2.gcd(factors[i], factors[j])
-            if f > 1:
-                factors[i] = f
-                factors[j] = factors[len(factors) - 1]
-                del factors[len(factors) - 1]
-                break
-    for i in range(len(factors)):
-        f = pollard_rho(n, factors[i], 1)
-        if f is not None:
-            factors.append(f)
-            factors.append(n // f)
-            return factors
-    return None
+    try:
+        file = sys.argv[1]
+        with open(file) as f:
+            for line_number in f:
+                line_number = int(line_number)
+                if line_number % 2 == 0:
+                        print("{}={}*{}".format(line_number, line_number // 2, 2))
+                        continue
+                i = 3
+                while i < line_number // 2:
+                    if line_number % i == 0:
+                        print("{}={}*{}".format(line_number, line_number // i, i))
+                        break
+                    i = i + 2
+                if i == (line_number // 2) + 1:
+                    print("{}={}*{}".format(line_number, line_number, 1))
+    except (IndexError):
+        pass
 
-if __name__ == '__main__':
-    start_time = time.time()
-    with open('rsa_number.txt', 'r') as f:
-        n = gmpy2.mpz(f.read().strip())
-    factors = quadratic_sieve(n)
-    end_time = time.time()
-    print(f"Factors of {n}: {factors}")
-    print(f"Time taken: {end_time - start_time:.4f} seconds")
+
+factorize()
